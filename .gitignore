@@ -1,1 +1,15 @@
 test
+!edge-api/test/
+!edge-api/test/**
+*.retry
+.vault_pass
+ansible/inventory/*.pyc
+__pycache__/
+.env
+*.crt
+*.key
+*.tgz
+*.lock
+!labs/lab18/app_python/flake.lock
+result
+result-*
