@@ -1,0 +1,39 @@
+name: Ansible Deployment
+
+on:
+  push:
+    branches: [ main, master, lab06 ]
+    paths:
+      - 'ansible/**'
+      - '.github/workflows/ansible-deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible and dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y ansible python3-docker python3-pip
+
+      - name: Create inventory file for local connection
+        run: |
+          cd ansible
+          echo "[webservers]" > inventory/ci.ini
+          echo "localhost ansible_connection=local" >> inventory/ci.ini
+
+      - name: Deploy with Ansible
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+        run: |
+          cd ansible
+          echo "$ANSIBLE_VAULT_PASSWORD" > /tmp/vault_pass
+          ansible-playbook -i inventory/ci.ini playbooks/deploy.yml --vault-password-file /tmp/vault_pass
+          rm /tmp/vault_pass
+      - name: Verify deployment
+        run: |
+          sleep 10
+          curl -f http://localhost:8000/health || exit 1
